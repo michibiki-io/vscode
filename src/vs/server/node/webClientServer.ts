@@ -27,6 +27,7 @@ import { URI } from 'vs/base/common/uri';
 import { streamToBuffer } from 'vs/base/common/buffer';
 import { IProductConfiguration } from 'vs/base/common/product';
 import { isString } from 'vs/base/common/types';
+import { getLocaleFromConfig, getNLSConfiguration } from 'vs/server/node/remoteLanguagePacks';
 import { CharCode } from 'vs/base/common/charCode';
 import { IExtensionManifest } from 'vs/platform/extensions/common/extensions';
 
@@ -308,14 +309,7 @@ export class WebClientServer {
 
 		const productConfiguration = <Partial<IProductConfiguration>>{
 			embedderIdentifier: 'server-distro',
-			extensionsGallery: this._webExtensionResourceUrlTemplate ? {
-				...this._productService.extensionsGallery,
-				'resourceUrlTemplate': this._webExtensionResourceUrlTemplate.with({
-					scheme: 'http',
-					authority: remoteAuthority,
-					path: `${this._webExtensionRoute}/${this._webExtensionResourceUrlTemplate.authority}${this._webExtensionResourceUrlTemplate.path}`
-				}).toString(true)
-			} : undefined
+			extensionsGallery: this._productService.extensionsGallery,
 		};
 
 		if (!this._environmentService.isBuilt) {
@@ -338,12 +332,15 @@ export class WebClientServer {
 			callbackRoute: this._callbackRoute
 		};
 
+		const locale = this._environmentService.args.locale || await getLocaleFromConfig(this._environmentService.argvResource.fsPath);
+		const nlsConfiguration = await getNLSConfiguration(locale, this._environmentService.userDataPath)
 		const nlsBaseUrl = this._productService.extensionsGallery?.nlsBaseUrl;
 		const values: { [key: string]: string } = {
 			WORKBENCH_WEB_CONFIGURATION: asJSON(workbenchWebConfiguration),
 			WORKBENCH_AUTH_SESSION: authSessionInfo ? asJSON(authSessionInfo) : '',
 			WORKBENCH_WEB_BASE_URL: this._staticRoute,
 			WORKBENCH_NLS_BASE_URL: nlsBaseUrl ? `${nlsBaseUrl}${!nlsBaseUrl.endsWith('/') ? '/' : ''}${this._productService.commit}/${this._productService.version}/` : '',
+			NLS_CONFIGURATION: asJSON(nlsConfiguration),
 		};
 
 		if (useTestResolver) {
