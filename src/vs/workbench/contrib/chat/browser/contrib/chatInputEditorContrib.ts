@@ -211,7 +211,7 @@ class InputEditorDecorations extends Disposable {
 
 		const textDecorations: IDecorationOptions[] | undefined = [];
 		if (agentPart) {
-			const agentHover = `(${agentPart.agent.id}) ${agentPart.agent.description}`;
+			const agentHover = `(${agentPart.agent.name}) ${agentPart.agent.description}`;
 			textDecorations.push({ range: agentPart.editorRange, hoverMessage: new MarkdownString(agentHover) });
 			if (agentSubcommandPart) {
 				textDecorations.push({ range: agentSubcommandPart.editorRange, hoverMessage: new MarkdownString(agentSubcommandPart.command.description) });
@@ -445,7 +445,7 @@ class AgentCompletions extends Disposable {
 					.map(agent => {
 						const isDupe = !!agents.find(other => other.name === agent.name && other.id !== agent.id);
 						const detail = agent.description;
-						const agentLabel = `${chatAgentLeader}${agent.name} (${agent.id})`;
+						const agentLabel = `${chatAgentLeader}${agent.name}`;
 
 						return {
 							label: isDupe ?
